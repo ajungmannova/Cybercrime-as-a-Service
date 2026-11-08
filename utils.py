@@ -11,7 +11,7 @@ from scipy.stats import chi2_contingency
 # Daily ECB euro reference rates (USD and GBP per 1 EUR), 19 May - 1 July 2025.
 # Source: European Central Bank reference rates, retrieved via the Frankfurter API (api.frankfurter.dev).
 # Each listing is converted at the last ECB fixing on or before its snapshot date
-# (weekend snapshots use the preceding Friday). Replaces the earlier fixed rates (EUR 1.08, GBP 1.27).
+# (weekend snapshots use the preceding Friday).
 ECB_RATES = {  # date: (EURUSD, EURGBP)
     "2025-05-19": (1.1262, 0.8419), "2025-05-20": (1.1241, 0.8418), "2025-05-21": (1.1321, 0.8446),
     "2025-05-22": (1.1309, 0.8427), "2025-05-23": (1.1301, 0.8382), "2025-05-26": (1.1381, 0.8392),
@@ -167,9 +167,8 @@ LEGIT_TOOL_KEYWORDS = [
     'elcomsoft', 'accessdata', 'mobiledit', 'eset']
 
 def crackedsw_sensitivity_check(unique_master):
-    mask = unique_master['ActualCategory'] == 'crackedsw/tools'  # update name to match your rename
-    is_legit = unique_master.loc[mask, 'Title'].str.contains(
-        '|'.join(LEGIT_TOOL_KEYWORDS), case=False, na=False)
+    mask = unique_master['ActualCategory'] == 'crackedsw/tools'
+    is_legit = unique_master.loc[mask, 'Title'].str.contains('|'.join(LEGIT_TOOL_KEYWORDS), case=False, na=False)
 
     share_inclusive = (unique_master['ActualCategory'] == 'malware/exploits').mean() * 100
     excl_master = unique_master.drop(unique_master.loc[mask].index[is_legit.values])
@@ -262,7 +261,7 @@ def calculate_category_volatility(df):
     """
     Calculates Coefficient of Variation (CV) for category supply.
     CV = Standard Deviation / Mean. 
-    Lower CV = More stable/professionalized supply.
+    Lower CV ~ More stable/professionalized supply.
     """
     daily_counts = df.groupby(['Date', 'ActualCategory']).size().unstack(fill_value=0)
     # CV per category
@@ -272,7 +271,7 @@ def calculate_category_volatility(df):
 
 def run_composition_stability_test(df, min_expected=5):
     """
-    Performs a Chi-square test to see if category composition changed 
+    Chi-square test to see if category composition changed 
     significantly between the first and second half of the observation period.
     """
 
@@ -295,7 +294,7 @@ def run_composition_stability_test(df, min_expected=5):
 
 def run_significance_tests(df, cat_col='ActualCategory', price_col='Price_USD', market_col='_marketplace'):
     """
-    Performs Kruskal-Wallis H-test for each category across markets.
+    Kruskal-Wallis H-test for each category across markets.
     Identifies if price distributions differ significantly.
     """
     from scipy.stats import kruskal
@@ -390,7 +389,8 @@ def get_cross_market_arbitrage(df):
     and sorts by presence (3 markets first) and then alphabetically by title.
     """
     df = df.copy()
-    df['Title'] = df['Title'].astype(str).str.strip().str.lower()  # normalize, matching calculate_jaccard_with_counts
+    # normalize, matching calculate_jaccard_with_counts
+    df['Title'] = df['Title'].astype(str).str.strip().str.lower()
 
     # 1. Filter for titles that appear in more than one marketplace
     title_counts = df.groupby('Title')['_marketplace'].nunique()
@@ -561,7 +561,7 @@ def detect_platform_reconversion(df, market='abacus', tol=0.01):
         return set(), pd.Series(dtype=float)
     x['lp'] = np.log(x['Price'])
     base = x.groupby('ProductId')['lp'].median()
-    for _ in range(50):                      # alternate: daily factor <-> base prices
+    for _ in range(50):                      
         daily = (x['lp'] - x['ProductId'].map(base)).groupby(x['Date']).median()
         base = (x['lp'] - x['Date'].map(daily)).groupby(x['ProductId']).median()
     x['base'] = x['lp'] - x['Date'].map(daily)
