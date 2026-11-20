@@ -1,0 +1,23 @@
+# Python packages for the Cybercrime-as-a-Service thesis code.
+# Install with: pip install -r requirements.txt
+
+# --- Data collection: abacus.py, nexus.py, vortex.py ---
+# Run on Tails 6 (Debian 12, Python 3.11) from 26 May to 28 June 2025. Installed in each session with
+#   torsocks pip3 install --user --break-system-packages beautifulsoup4 "requests[socks]"
+# The libraries were reinstalled every session, so the versions below are the latest releases
+# at the start of collection (reconstructed from PyPI release dates). requests 2.32.4 was released
+# on 9 June 2025, so sessions after that date most likely used 2.32.4.
+beautifulsoup4==4.13.4
+requests[socks]==2.32.3
+PySocks==1.7.1
+
+# --- Analysis: darknetPriceAnalysis.ipynb, utils.py, catValidation.py ---
+# Python 3.14
+pandas==3.0.5
+numpy
+scipy
+matplotlib
+seaborn
+scikit-learn
+scikit-posthocs
+wordcloud
