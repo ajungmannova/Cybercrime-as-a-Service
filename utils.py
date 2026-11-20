@@ -259,12 +259,16 @@ def calculate_rms_index(df):
 
 def calculate_category_volatility(df):
     """
-    Calculates Coefficient of Variation (CV) for category supply.
-    CV = Standard Deviation / Mean. 
-    Lower CV ~ More stable/professionalized supply.
+    Coefficient of Variation (CV) of daily unique products per category.
+    A product is marketplace + vendor + title (the composite key from Section 2.6.2),
+    so a title listed under several ProductIds on the same day counts once (as in Figure 8).
     """
-    daily_counts = df.groupby(['Date', 'ActualCategory']).size().unstack(fill_value=0)
-    # CV per category
+    key = (df['_marketplace'] + '::' +
+           df['Vendor'].astype(str).str.strip().str.lower() + '::' +
+           df['Title'].astype(str).str.strip().str.lower())
+    daily_counts = (df.assign(_key=key)
+                      .groupby(['Date', 'ActualCategory'])['_key'].nunique()
+                      .unstack(fill_value=0))
     cv = (daily_counts.std() / daily_counts.mean()).round(3)
     return cv.sort_values()
 
@@ -487,8 +491,8 @@ def rms_with_vendor_ci(unique_df, n_boot=2000, seed=2025):
     point = calculate_rms_index(unique_df).replace(0, np.nan)
     boots = []
     for _ in range(n_boot):
-        b = calculate_rms_index(_resample_vendors(unique_df, rng)).replace(0, np.nan)
-        boots.append(b.reindex(index=point.index, columns=point.columns))
+        b = calculate_rms_index(_resample_vendors(unique_df, rng))
+        boots.append(b.reindex(index=point.index, columns=point.columns).fillna(0))
     arr = np.stack([b.values for b in boots])
     import warnings
     with warnings.catch_warnings():          # categories absent from a market give all-NaN cells
